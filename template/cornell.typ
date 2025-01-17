@@ -517,9 +517,11 @@ Z = solve_RK_equation(p, T, Tc, pc, ω);
 @show Z;
 ```
 
-== 应用及注意
+#sec
 
-=== EOS解法
+应用及注意
+
+EOS解法
 1. 知$T,V$查表$P_c,T_c$求 P 直接代
 2. 知$P,T$求$V$，迭代法
 
@@ -543,7 +545,6 @@ $ V_(n+1) = (R T)/p + b - a(V-b) / (T^0.5 P V_n (V_n + b)) $
       node((0,-2), $"计算"V_n = (R T)/p + b - a(V_(n-1)-b) / (T^0.5 p V_(n-1) (V_(n-1) + b))$),
       node((0,-3), $|V_n - V_(n-1)| <= 1 times 10^(-3)$, shape: shapes.diamond),
       node((-0.8,-2), $n += 1 \ V_n => V_(n-1)$),
-      
       node((1.0,-3), $"输出"V_n$, shape: shapes.pill),
       
       edge((0,0), (0,-1), "->"),
@@ -559,7 +560,9 @@ $ V_(n+1) = (R T)/p + b - a(V-b) / (T^0.5 P V_n (V_n + b)) $
 
 该迭代流程图本质上与前面给定$Z_0$迭代求解$Z$的流程没有什么本质的差别。但是在求解过程中需要注意单位的一致性。
 
-=== 小结
+#sec
+
+#le[小结]
 
 上述几个模型的数学表达式总结如下
 
@@ -592,6 +595,7 @@ $ p_r = p/p_c $
 
 根据上述，有如下两参数普遍化临界压缩因子关系式:
 $ Z_c = (P V)/(R T) = (p_c p_r V_c V_r )/(R T_c T_r) $
+
 考虑分子间作用力，偶极矩时，$Z_c$并不能起到良好的效果。于是考虑用三参数（另加一偏心因子$omega$），
 此时有，
 $ Z = f(T_r, P_r, omega) $
@@ -611,7 +615,7 @@ $ mat(
   log P = - frac(Delta H, 2.303 R) frac(1, T) + c quad arrow.r.double quad log P = a_1 - b_1 frac(1, T);
 ) $
 
-其中　$a_1＝c,b_1 = frac(Delta H, 2 . 303 R)$
+其中$a_1=c,b_1 = frac(Delta H, 2 . 303 R)$
 
 #le[#figure(
   image("./imgs/2.4.png", width: 100%, fit: "contain"),
@@ -626,3 +630,200 @@ $ log P_r^s = a - b / T_r $
 1. 对于球形分子（非极性，量子），如$A r、K r、X e$，作 $log P_r^s ~ 1/T_r$ 图，其斜率相同，并且在 $T_r = 0.7$ 时，$log P_r^s = -1$ 。
 
 2. 对于非球形分子，作 $log P_r^s ~ 1/T_r$ 线，结果皆位于球形分子的下面，并且随着物质极性的增加，偏离程度愈加明显。
+
+由上述讨论提出以下偏心因子概念($ω$):以球形分子在$T_r=0.7$时的对比饱和蒸汽压的对数作标准，任意物质在$T_r=0.7$时，对比饱和蒸汽压的对数与其标准的差值，就称为该物质的偏心因子。
+
+$ 
+omega 
+&= [log(upright(P r)^s)]_(T r = 0.7, "standard") - [log(P_r^s)]_(T r = 0 . 7, "other")\
+&= -1 - [log(P_r^s)]_(T r = 0.7, "other")\
+&= - [log(P_r^s)]_(T r = 0.7) - 1
+$
+
+偏心因子物理意义表现为：其值大小是反映物质分子形状与物质极性大小的量度。
+对于球形分子（Ar,Kr,Xe等)$ω = 0$,对于非球形分子$ω != 0$且$ω＞0$。
+
+#sec
+#le[普遍化压缩因子法（普压法）]
+
+$Z = Z^((0)) + ω Z^((1)) + ω^2 Z^((2)) + ...$
+
+一般取两项，就能满足工程需要，亦即：
+
+$Z = Z^((0)) + ω Z^((1))$
+
+式中：$Z^((0)) = f₁(T_r, p_r) $— 球形分子的Z值；$Z^((1)) = f₂(T_r, p_r) $— 与ω相关联的Z的校正项。如果校正项不能满足工程需要，可以往后多取几项。实际工程上，一般取两项就足以满足精度要求。
+
+$Z^((0))$和$Z^((1))$的表达式是非常复杂的，一般用图和表来表示。
+
+#le[注意：当$V_r < 2$时，由$Ｔ,V$用普压法得$p$，要用迭代法计算。
+]
+
+其流程图如下：
+
+#align(center)[
+  #figure(
+    caption:"普压法计算流程图"
+  )[
+    #diagram(
+      node-stroke:0.5pt,
+      node-fill:white,
+      spacing:(2cm, 1.0cm),
+
+      node((0, 0), $"输入"T,P,T_c,P_c,V_c,omega$, shape:shapes.pill),
+      node((0, 1), $"计算"T_r,P_r$),
+      node((0, 2), $"查图得"Z^((0)), Z^((1))$),
+      node((0, 3), $"压缩因子"Z = Z^((0)) + omega Z^((1))$),
+      node((0, 4), $"由" Z = (P V)/(R T)"得"P, V, T$, shape: shapes.pill),
+
+      edge((0, 0), (0, 1), "->"),
+      edge((0, 1), (0, 2), "->"),
+      edge((0, 2), (0, 3), "->"),
+      edge((0, 3), (0, 4), "->")
+    )
+  ]
+]
+
+
+#sec
+
+#le[普遍化维里系数法（普维法）]
+
+两项维里方程为$Z＝1+B P \/R T$将对比参数代入维里方程，得
+
+$ Z = 1 + frac(B(P \/ P_c) P_c, R(T \/ T_c) T_c) = 1 + frac(B P_c, R T_c) bullet frac(upright(P r), T r) $
+
+$hat(B) =  frac(B P_c, R T_c)$是T的函数，无量纲，是一个无因次数群，也称普遍化第二维里系数。
+
+$ frac(B P_c, R T_c) = B^((0)) + omega B^((1)) $
+$ B^((0)) = 0 . 083 - frac(0.422, T_r^(1.6)) $
+$ B^((1)) = 0 . 139 - frac(0.172, T_r^(4.2)) $
+
+用普维法计算$P$不必迭代，直接计算。例如，当$V_r>2$时，判断用普维法，则可由$T，V$得到P。流程图如下：
+
+#align(center)[
+  #figure(
+    caption: "普遍化维里系数法（普维法）求解流程图",
+  )[
+    #diagram(
+      node-stroke: 0.5pt,
+      node-fill: white,
+      spacing: (2cm, 0.8cm),
+
+      node((0,0), $"输入"T, V, T_c, P_c, R, omega$, shape: shapes.pill),
+      node((0,-1), [
+        $B^((0)) = 0.083 - (0.422)/(T_r^(1.6))","$
+        $B^((1)) = 0.139 - (0.172)/(T_r^(4.2))$
+      ]),
+      node((0,-2), $hat(B) = B^((0)) + omega B^((1))$),
+      node((0,-3), $B = (R T_c)/(P_c) dot hat(B)$),
+      node((0,-4), [
+        $Z = (P V)/(R T) = 1 + (B P)/(R T)$
+      ]),
+      node((0,-5),[
+        $P = (R T)/(V - B)$
+      ]),
+      node((0,-6), $"输出"P, Z$, shape: shapes.pill),
+      
+      edge((0,0), (0,-1), "->"),
+      edge((0,-1), (0,-2), "->"),
+      edge((0,-2), (0,-3), "->"),
+      edge((0,-3), (0,-4), "->"),
+      edge((0,-4), (0,-5), "->"),
+      edge((0,-5), (0,-6), "->"),
+    )
+  ]
+]
+
+使用此方法时，已知 $T_r$、$V_r$、$T_c$、$P_c$、$R$ 和 $omega$，可直接计算得到 $P$ 和 $Z$，无需迭代。
+
+#le[普维法-Julia实现]
+
+```julia
+function solve_generalized_virial_equation(T, V, Tc, Pc, R, ω)
+    # 计算约化温度
+    Tr = T / Tc
+    # 计算B^(0)和B^(1)
+    B0 = 0.083 - 0.422 / Tr^1.6
+    B1 = 0.139 - 0.172 / Tr^4.2
+    # 计算hat(B)
+    hat_B = B0 + ω * B1
+    # 计算B
+    B = (R * Tc / Pc) * hat_B
+    # 计算P
+    P = R * T / (V - B)
+    # 计算Z
+    Z = 1 + (B * P) / (R * T)
+    return P, Z
+end
+
+# 主程序
+T  = 300.0  # 温度，K
+V  = 0.001  # 体积，m³/mol
+Tc = 190.6  # 临界温度，K（以甲烷为例）
+Pc = 4.6e6  # 临界压力，Pa（以甲烷为例）
+R  = 8.314  # 气体常数，J/(mol·K)
+ω  = 0.011  # 偏心因子（以甲烷为例）
+
+P, Z = solve_generalized_virial_equation(T, V, Tc, Pc, R, ω)
+
+println("压力 P = ", P, " Pa")
+println("压缩因子 Z = ", Z)
+```
+
+#sec
+
+#le[对比态原理小结]
+
+#align(center)[
+  #table(
+    columns: (8em, 10em, 10.5em, 8em),
+    inset: 10pt,
+    align: horizon + center,
+    [*对比态原理分类*], [*方法名称*], [*计算手段*],[*适用范围*],
+    [两参数对比态原理 \ $Z = f(T_r,p_r)$], [两参数普遍化压缩因子法],[查图],[适合简单球形流体。不实际使用],
+    [三参数对比态原理 \ $Z = f(T_r,p_r,omega)$], [普遍化维里系数法],[$frac(B P_c, R T_c) = B^((0)) + omega B^((1))$],[适合非极性、弱极性流体；中、低压误差3%。对强极性不适合],
+    [], [三参数普遍化压缩因子法],[$Z = Z^((0)) + omega Z^((1))$],[],
+  )
+]
+#le[
+真实气体混合物的非理想性可看成是由两方面的原因造成的
+- 纯气体的非理想性
+- 混合作用所引起的非理想性
+
+Kay 规则
+
+]
+
+#sec
+
+真实气体的PVT关系
+
+$ T_(c m) = y_1 T_(c 1) + y_2 T_(c 2) + ... = sum y_i T_(c i) $
+$ p_(c m) = y_1 p_(c 1) + y_2 p_(c 2) + ... = sum y_i p_(c i) $
+$ T_(r m) = T \/ T_(c m) $
+$ p_(r m) = p \/ p_(c m) $
+
+后续计算就把混合后的当作是纯物质来计算。
+
+#sec
+
+#le[道尔顿定律 + Z图]
+
+$ italic(V) = sum italic(V)_upright(i) $
+$ upright(V)_upright(i) = upright(Z)_upright(i) n_upright(i) R upright(T) \/ upright(P) $
+$ Z_n = Sigma sans(y)_i Z_i $
+
+式中:$Pi$—组分$i$在混合物$T，V$的压力，纯组分$i$的压力
+
+$Z_i$—组分$i$的压缩因子，由$p_i，T$决定
+
+$y_i$—组分$i$的$m o l$分率，$y_i=n_i\/n$
+
+$p_i$是纯组分的压力，不能称为分压。 
+
+$p_i$是纯组分的压力，不能称为分压。 
+
+道尔顿定律关键在于组分压缩因子的计算，而组分压缩因子的计算关键又在于$p$的计算。其中$Z_i$是由$T_(r i) = T/T_(c i)$，$P_(r i) = p/p_(c i)$查两参数压缩因子图得来的。 
+
+不管是求$P,T,V$性质中的那个参数，纯组分i的压力$p_i$都是未知的，因而$p_i$的计算必须要采用特殊的数学手段（试差法或迭代法 ）进行求取。
